@@ -1,0 +1,9 @@
+{
+  "name": "Nexus Search",
+  "description": "A futuristic AI-powered search engine that uses Gemini with Google Search grounding to provide real-time, cited answers to complex queries.",
+  "requestFramePermissions": [
+    "geolocation",
+    "camera",
+    "microphone"
+  ]
+}
