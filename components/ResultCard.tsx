@@ -1,81 +1,101 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 
 interface ResultCardProps {
   answer: string;
-  images?: string[];
   isDarkMode?: boolean;
+  lastUpdated: string;
   transparency?: {
     confidence: number;
     reasoning: string;
-    biasWarning?: string;
+    consensus?: string;
   };
+  onBookmark?: () => void;
 }
 
-const ResultCard: React.FC<ResultCardProps> = ({ answer, images, isDarkMode, transparency }) => {
+const ResultCard: React.FC<ResultCardProps> = ({ answer, isDarkMode, lastUpdated, transparency, onBookmark }) => {
+  const [showMeta, setShowMeta] = useState(false);
+
   const formatText = (text: string) => {
-    return text.split('\n').map((line, i) => (
-      <p key={i} className={`mb-4 leading-relaxed last:mb-0 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-        {line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\*(.*?)\*/g, '<em>$1</em>')}
-      </p>
-    ));
+    return text.split('\n').map((line, i) => {
+      const trimmed = line.trim();
+      if (!trimmed) return null;
+      
+      if (trimmed.startsWith('Key Aspects:') || trimmed.startsWith('In essence,')) {
+        return <h3 key={i} className="text-lg font-black mt-8 mb-4 text-[#00ff41] uppercase tracking-widest">{trimmed}</h3>;
+      }
+      
+      if (trimmed.startsWith('*') || trimmed.startsWith('-')) {
+        return <li key={i} className="ml-5 mb-3 list-disc text-gray-400 text-sm leading-relaxed">{trimmed.substring(1).trim()}</li>;
+      }
+
+      return (
+        <p key={i} className="mb-6 leading-relaxed text-gray-300 text-base font-medium">
+          {trimmed.replace(/\*\*(.*?)\*\*/g, '<span class="text-white font-black">$1</span>')}
+        </p>
+      );
+    });
   };
 
   return (
     <div className="space-y-6">
-      <div className={`border rounded-[2.5rem] p-8 transition-colors ${isDarkMode ? 'bg-[#111111] border-white/5' : 'bg-white border-gray-100 shadow-sm'}`}>
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white shadow-lg">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-          </div>
-          <h2 className="text-xl font-bold tracking-tight">Nexus Insight</h2>
+      <div className="rounded-[3rem] p-8 border-2 border-white/5 bg-black relative group overflow-hidden">
+        <div className="absolute top-0 right-0 p-6 opacity-5 pointer-events-none">
+            <svg className="w-48 h-48 text-[#00ff41]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14.5v-9l6 4.5-6 4.5z"/></svg>
+        </div>
+        
+        <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-3">
+                <div className="w-2 h-2 rounded-full bg-[#00ff41] animate-pulse"></div>
+                <span className="text-[10px] font-black uppercase tracking-widest text-[#00ff41]/60">Decrypted Overview</span>
+            </div>
+            <div className="text-[9px] font-mono text-gray-600 flex items-center gap-4">
+              <span>ID: {Math.random().toString(16).substring(2, 8).toUpperCase()}</span>
+            </div>
         </div>
 
-        <div className={`prose max-w-none ${isDarkMode ? 'prose-invert' : 'prose-blue'}`}>
-          {formatText(answer)}
+        <div className="prose max-w-none prose-invert">
+             {formatText(answer)}
         </div>
 
-        {images && images.length > 0 && (
-          <div className="mt-8 grid grid-cols-1 gap-4">
-            {images.map((img, idx) => (
-              <div key={idx} className={`relative group overflow-hidden rounded-2xl shadow-md ${isDarkMode ? 'bg-white/5' : 'bg-gray-100'}`}>
-                <img src={img} alt="Generated visual result" className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105" />
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {transparency && (
-        <div className={`p-8 border rounded-[2.5rem] space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500 ${isDarkMode ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-emerald-50 border-emerald-100'}`}>
-          <div className="flex justify-between items-center">
-            <h4 className="text-sm font-black uppercase tracking-widest text-emerald-600">Explainable Transparency</h4>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-emerald-600/60 uppercase">Confidence</span>
-              <span className="text-lg font-black text-emerald-600 tabular-nums">{transparency.confidence}%</span>
-            </div>
-          </div>
-          
-          <div className="space-y-4">
-            <div className="p-4 bg-white/40 rounded-2xl border border-white/20 text-sm leading-relaxed">
-              <span className="font-bold text-emerald-700">Reasoning Chain: </span>
-              <span className={isDarkMode ? 'text-gray-300' : 'text-emerald-900/70'}>{transparency.reasoning}</span>
-            </div>
-            
-            {transparency.biasWarning && (
-              <div className="p-4 bg-amber-500/10 rounded-2xl border border-amber-500/20 text-sm leading-relaxed flex gap-3">
-                <span className="text-lg">⚖️</span>
-                <div>
-                   <span className="font-bold text-amber-600">Bias Detected: </span>
-                   <span className={isDarkMode ? 'text-gray-300' : 'text-amber-900/70'}>{transparency.biasWarning}</span>
+        {showMeta && transparency && (
+            <div className="mt-12 p-8 rounded-[2rem] bg-white/5 border border-white/10 animate-in slide-in-from-top-4 duration-500">
+                <h4 className="text-[10px] font-black uppercase tracking-widest text-[#00ff41] mb-6">Truth Matrix Data</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-2">
+                        <span className="text-[9px] font-black uppercase opacity-40">Grounding Source</span>
+                        <p className="text-xs text-gray-400 leading-relaxed">{transparency.reasoning}</p>
+                    </div>
+                    <div className="space-y-2">
+                        <span className="text-[9px] font-black uppercase opacity-40">Confidence Score</span>
+                        <div className="flex items-center gap-4">
+                            <span className="text-xl font-black text-[#00ff41]">{transparency.confidence}%</span>
+                            <div className="flex-1 h-1 bg-gray-900 rounded-full">
+                                <div className="h-full bg-[#00ff41]" style={{width: `${transparency.confidence}%`}}></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-              </div>
-            )}
-          </div>
+            </div>
+        )}
+
+        <div className="mt-12 flex items-center justify-between pt-8 border-t border-white/5">
+            <button 
+                onClick={() => setShowMeta(!showMeta)}
+                className="text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-[#00ff41] transition-colors flex items-center gap-2"
+            >
+                {showMeta ? 'Hide Trace Data' : 'View Trace Data'}
+                <svg className={`w-3 h-3 transition-transform ${showMeta ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" /></svg>
+            </button>
+            <div className="flex items-center gap-6">
+                <div className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#00ff41]"></span>
+                    <span className="text-[9px] font-black text-gray-600 uppercase">Verified Index</span>
+                </div>
+                <span className="text-[9px] font-mono text-gray-700">{lastUpdated}</span>
+            </div>
         </div>
-      )}
+      </div>
     </div>
   );
 };

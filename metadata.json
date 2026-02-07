@@ -1,6 +1,6 @@
 {
-  "name": "Nexus Search",
-  "description": "A futuristic AI-powered search engine that uses Gemini with Google Search grounding to provide real-time, cited answers to complex queries.",
+  "name": "Nexus OS Explorer",
+  "description": "A high-performance AI-powered desktop environment with integrated search, maps, workspace, and security.",
   "requestFramePermissions": [
     "geolocation",
     "camera",
